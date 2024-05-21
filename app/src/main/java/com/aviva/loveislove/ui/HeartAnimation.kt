@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,16 +17,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Piece(color: Color, modifier: Modifier = Modifier, delayMillis: Int, index: Int ) {
+fun Piece(color: Color, modifier: Modifier = Modifier, delayMillis: Int, isRandom: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition()
+    val targetHeight = remember { (10..90).random().toFloat() }
     val height by infiniteTransition.animateFloat(
         initialValue = 10f,
-        targetValue = when(index) {
-            0,1,8 -> 30f
-            2,3,6,7 -> 60f
-            4,5 -> 90f
-            else -> 10f
-        },
+        targetValue = 30f,
+        animationSpec = infiniteRepeatable(
+            tween(
+                durationMillis = 3200,
+                delayMillis = delayMillis,
+                easing = FastOutSlowInEasing
+            ),
+            RepeatMode.Reverse
+        )
+    )
+    val randomHeight by infiniteTransition.animateFloat(
+        initialValue = 10f,
+        targetValue = targetHeight,
         animationSpec = infiniteRepeatable(
             tween(
                 durationMillis = 3200,
@@ -38,7 +47,7 @@ fun Piece(color: Color, modifier: Modifier = Modifier, delayMillis: Int, index: 
     val animatedColor by animateColorAsState(targetValue = color)
     Box(
         modifier = modifier
-            .size(width = 10.dp, height = height.dp)
+            .size(width = 10.dp, height = if (isRandom) randomHeight.dp else height.dp)
             .background(color = animatedColor, shape = CircleShape)
     )
 }
@@ -50,12 +59,12 @@ fun Heart() {
     Column {
         Row(modifier = Modifier.size(138.dp)) {
             colors.forEachIndexed { index, color ->
-                Piece(color = color, delayMillis = index * 150, index = index)
+                Piece(color = color, delayMillis = index * 150)
             }
         }
         Row(modifier = Modifier.size(138.dp)) {
             colors.reversed().forEachIndexed { index, color ->
-                Piece(color = color, delayMillis = index * 150, index = index)
+                Piece(color = color, delayMillis = index * 150, isRandom = true)
             }
         }
     }
